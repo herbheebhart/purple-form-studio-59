@@ -152,7 +152,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_form_published: { Args: { form_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
