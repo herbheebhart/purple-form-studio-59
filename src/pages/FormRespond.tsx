@@ -69,19 +69,26 @@ export default function FormRespond() {
 
     setSubmitting(true);
 
-    const { data: response } = await supabase.from('form_responses').insert({ form_id: id! }).select().single();
-
-    if (response) {
-      const answerRows = questions.map((q) => ({
-        response_id: response.id,
+    try {
+      const answerData = questions.map((q) => ({
         question_id: q.id,
         answer_value: q.question_type === 'checkboxes'
           ? (checkboxAnswers[q.id] || []).join(', ')
           : (answers[q.id] || ''),
       }));
 
-      await supabase.from('response_answers').insert(answerRows);
-      setSubmitted(true);
+      const { data, error } = await supabase.functions.invoke('submit-response', {
+        body: { form_id: id!, answers: answerData },
+      });
+
+      if (error) throw error;
+      if (data?.success) {
+        setSubmitted(true);
+      } else {
+        toast({ title: 'Error', description: data?.error || 'Submission failed', variant: 'destructive' });
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Submission failed', variant: 'destructive' });
     }
 
     setSubmitting(false);
